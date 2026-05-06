@@ -1,3 +1,3 @@
-module github.com/kivia-observe/kivia-sdk-go
+module github.com/winnerx0/kivia-sdk-go
 
 go 1.25.0

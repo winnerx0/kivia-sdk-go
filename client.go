@@ -14,7 +14,7 @@ import (
 // It configures the default production base URL and the underlying HTTP client.
 func NewClient(apiKey string) *Client {
 	client := &Client{
-		BaseURL:    "https://kivia.winnerx0.dev/api/v1",
+		BaseURL:    "https://kivia.pxxl.click/api/v1",
 		ApiKey:     apiKey,
 		HttpClient: &http.Client{},
 	}

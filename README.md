@@ -5,7 +5,7 @@ The Kivia Go SDK is the official Go middleware client for integrating with the K
 ## Installation
 
 ```bash
-go get github.com/kivia-observe/kivia-sdk-go
+go get github.com/winnerx0/kivia-sdk-go
 ```
 
 ## Quick Start (with standard `net/http`)
@@ -18,7 +18,7 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"github.com/kivia-observe/kivia-sdk-go"
+	"github.com/winnerx0/kivia-sdk-go"
 )
 
 func main() {
@@ -41,8 +41,43 @@ func main() {
 }
 ```
 
+## Quick Start (with Fiber v3)
+
+Register `FiberLog` before your routes:
+
+```go
+package main
+
+import (
+    "log"
+
+    "github.com/gofiber/fiber/v3"
+    kiviasdk "github.com/winnerx0/kivia-sdk-go"
+)
+
+func main() {
+    client := kiviasdk.NewClient("YOUR_KIVIA_API_KEY")
+    app := fiber.New()
+    app.Use(client.FiberLog())
+
+    app.Get("/hello", func(c fiber.Ctx) error {
+        return c.SendString("Hello from Kivia!")
+    })
+
+    log.Fatal(app.Listen(":8080"))
+}
+```
+
+`FiberLog()` captures the original URL (including query parameters), response
+status, client IP, timestamp, and latency in milliseconds. It sends logs
+asynchronously and copies request values before Fiber reuses its context.
+Returned handler errors are passed to the application's configured error handler
+before the response status is recorded.
+
 ## Architecture
 
 This SDK exports the following:
 * `NewClient(apiKey)`: Prepares the backend target routing and authentication payload.
 * `client.NewLog(http.Handler)`: Native `net/http` compatible middleware. Wraps around any multiplexer (e.g. standard library `ServeMux`, `gorilla/mux`, `chi`) and automatically traps the execution time to log analytics asynchronously without holding up the server responses!
+
+* `client.FiberLog()`: Fiber v3 middleware, registered with `app.Use(client.FiberLog())`.

@@ -55,38 +55,43 @@ func (c *Client) NewLog(next http.Handler) http.HandlerFunc {
 // sendLog is called asynchronously to send the collected log data to the Kivia backend.
 // It builds the Log entry and executes a POST request against the observability API.
 func (c *Client) sendLog(r *http.Request, rw *ResponseWriteWrapper, latency time.Duration) {
-    url := fmt.Sprintf("%s/logs/create", c.BaseURL)
-    logEntry := &Log{
-        Path:      r.URL.String(),
-        Status:    rw.statusCode,
-        IPAddress: r.RemoteAddr,
-        Timestamp: time.Now(),
-        Latency:   int(latency.Milliseconds()),
-    }
+	logEntry := &Log{
+		Path:      r.URL.String(),
+		Status:    rw.statusCode,
+		IPAddress: r.RemoteAddr,
+		Timestamp: time.Now(),
+		Latency:   int(latency.Milliseconds()),
+	}
+	c.sendLogEntry(logEntry)
+}
 
-    bodyBytes, err := json.Marshal(logEntry)
-    if err != nil {
-        log.Printf("kiviasdk: failed to marshal log: %v", err)
-        return
-    }
+// sendLogEntry sends a captured request metric to the Kivia backend.
+func (c *Client) sendLogEntry(logEntry *Log) {
+	url := fmt.Sprintf("%s/logs/create", c.BaseURL)
 
-    req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(bodyBytes))
-    if err != nil {
-        log.Printf("kiviasdk: failed to create request: %v", err)
-        return
-    }
-    req.Header.Set("Content-Type", "application/json")
-    req.Header.Set("X-kivia-api-key", c.ApiKey)
+	bodyBytes, err := json.Marshal(logEntry)
+	if err != nil {
+		log.Printf("kiviasdk: failed to marshal log: %v", err)
+		return
+	}
 
-    res, err := c.HttpClient.Do(req)
-    if err != nil {
-        log.Printf("kiviasdk: failed to send log: %v", err)
-        return
-    }
-    defer res.Body.Close()
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(bodyBytes))
+	if err != nil {
+		log.Printf("kiviasdk: failed to create request: %v", err)
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-kivia-api-key", c.ApiKey)
 
-    if res.StatusCode != 201 {
-        body, _ := io.ReadAll(res.Body)
-        log.Printf("kiviasdk: log rejected (%d): %s", res.StatusCode, string(body))
-    }
+	res, err := c.HttpClient.Do(req)
+	if err != nil {
+		log.Printf("kiviasdk: failed to send log: %v", err)
+		return
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 201 {
+		body, _ := io.ReadAll(res.Body)
+		log.Printf("kiviasdk: log rejected (%d): %s", res.StatusCode, string(body))
+	}
 }

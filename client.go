@@ -90,7 +90,7 @@ func (c *Client) sendLogEntry(logEntry *Log) {
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode != 201 {
+	if res.StatusCode != http.StatusAccepted {
 		body, _ := io.ReadAll(res.Body)
 		log.Printf("kiviasdk: log rejected (%d): %s", res.StatusCode, string(body))
 	}
